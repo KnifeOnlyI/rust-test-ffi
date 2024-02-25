@@ -1,5 +1,4 @@
-#[cfg(target_os = "windows")]
-use std::fmt::Error;
+use windows::Win32::System::Threading::{PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
 
 #[cfg(target_os = "windows")]
 use crate::process::Process;
@@ -11,17 +10,18 @@ use crate::windows_api::process;
 /// # Returns
 /// A `Vec` of `Process` objects if the processes are found, otherwise an `Error`.
 #[cfg(target_os = "windows")]
-pub fn get_all() -> Result<Vec<Process>, Error> {
+pub fn get_all() -> Result<Vec<Process>, String> {
     let r_process_ids = process::enum_processes(None);
 
     if r_process_ids.is_err() {
-        return Err(Error);
+        return Err(r_process_ids.unwrap_err().message());
     }
 
     let mut processes = Vec::new();
 
     for process_id in r_process_ids.unwrap() {
-        let r_handle = process::open_process(process_id);
+        let r_handle =
+            process::open_process(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, process_id);
 
         if r_handle.is_err() {
             continue;
@@ -62,6 +62,7 @@ pub fn get_all() -> Result<Vec<Process>, Error> {
         let process_name = r_module_base_name.unwrap();
 
         processes.push(Process {
+            handle,
             pid: process_id,
             name: process_name,
         });

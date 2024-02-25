@@ -1,14 +1,12 @@
 use std::mem::size_of;
 
 use windows::core::Error;
-use windows::Win32::Foundation::{BOOL, CloseHandle, HANDLE, HMODULE, MAX_PATH};
+use windows::Win32::Foundation::{CloseHandle, BOOL, HANDLE, HMODULE, MAX_PATH};
 use windows::Win32::System::ProcessStatus;
 use windows::Win32::System::ProcessStatus::{
-    EnumProcesses, EnumProcessModules, EnumProcessModulesEx, LIST_MODULES_ALL,
+    EnumProcessModules, EnumProcessModulesEx, EnumProcesses, LIST_MODULES_ALL,
 };
-use windows::Win32::System::Threading::{
-    IsWow64Process, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
-};
+use windows::Win32::System::Threading::{IsWow64Process, OpenProcess, PROCESS_ACCESS_RIGHTS};
 
 use crate::windows_api::types::DWORD_SIZE;
 
@@ -136,18 +134,16 @@ pub fn get_module_base_name_w(hprocess: HANDLE, hmodule: HMODULE) -> windows::co
 /// Opens the specified process and returns a handle to it.
 ///
 /// # Arguments
+/// dwdesiredaccess - The access to the process object.
 /// dwprocessid - The identifier of the local process to be opened.
 ///
 /// # Returns
 /// If the function succeeds, the return value is an open handle to the specified process.
-pub fn open_process(dwprocessid: u32) -> windows::core::Result<HANDLE> {
-    return unsafe {
-        OpenProcess(
-            PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-            false,
-            dwprocessid,
-        )
-    };
+pub fn open_process(
+    dwdesiredaccess: PROCESS_ACCESS_RIGHTS,
+    dwprocessid: u32,
+) -> windows::core::Result<HANDLE> {
+    return unsafe { OpenProcess(dwdesiredaccess, false, dwprocessid) };
 }
 
 /// Closes the specified handle.
