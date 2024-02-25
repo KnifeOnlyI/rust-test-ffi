@@ -1,12 +1,16 @@
+#[cfg(target_os = "windows")]
 use std::fmt::Error;
 
+#[cfg(target_os = "windows")]
 use crate::process::Process;
+#[cfg(target_os = "windows")]
 use crate::windows_api::process;
 
 /// Get the list of all processes.
 ///
 /// # Returns
 /// A `Vec` of `Process` objects if the processes are found, otherwise an `Error`.
+#[cfg(target_os = "windows")]
 pub fn get_all() -> Result<Vec<Process>, Error> {
     let r_process_ids = process::enum_processes(None);
 
@@ -28,7 +32,10 @@ pub fn get_all() -> Result<Vec<Process>, Error> {
         let r_is_wow_64_process = process::is_wow64_process(handle);
 
         if r_is_wow_64_process.is_err() {
-            println!("Cannot determine if process {} is 32 or 64 bits", process_id);
+            println!(
+                "Cannot determine if process {} is 32 or 64 bits",
+                process_id
+            );
             continue;
         }
 
@@ -45,10 +52,7 @@ pub fn get_all() -> Result<Vec<Process>, Error> {
         }
 
         let hmodule = r_process_modules.unwrap();
-        let r_module_base_name = process::get_module_base_name_w(
-            handle,
-            hmodule,
-        );
+        let r_module_base_name = process::get_module_base_name_w(handle, hmodule);
 
         if r_module_base_name.is_err() {
             println!("Cannot get module base name for process {}", process_id);
@@ -69,5 +73,3 @@ pub fn get_all() -> Result<Vec<Process>, Error> {
 
     return Ok(processes);
 }
-
-

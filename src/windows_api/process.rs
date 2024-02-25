@@ -3,8 +3,12 @@ use std::mem::size_of;
 use windows::core::Error;
 use windows::Win32::Foundation::{BOOL, CloseHandle, HANDLE, HMODULE, MAX_PATH};
 use windows::Win32::System::ProcessStatus;
-use windows::Win32::System::ProcessStatus::{EnumProcesses, EnumProcessModules, EnumProcessModulesEx, LIST_MODULES_ALL};
-use windows::Win32::System::Threading::{IsWow64Process, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
+use windows::Win32::System::ProcessStatus::{
+    EnumProcesses, EnumProcessModules, EnumProcessModulesEx, LIST_MODULES_ALL,
+};
+use windows::Win32::System::Threading::{
+    IsWow64Process, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
+};
 
 use crate::windows_api::types::DWORD_SIZE;
 
@@ -21,12 +25,7 @@ pub fn enum_processes(cb: Option<u32>) -> Result<Vec<u32>, Error> {
     let mut lpidprocess = Vec::with_capacity(cb as usize);
     let mut lpcbneeded = 0;
 
-    let r_processes = unsafe {
-        EnumProcesses(
-            lpidprocess.as_mut_ptr(),
-            cb,
-            &mut lpcbneeded)
-    };
+    let r_processes = unsafe { EnumProcesses(lpidprocess.as_mut_ptr(), cb, &mut lpcbneeded) };
 
     if r_processes.is_err() {
         return Err(r_processes.unwrap_err());
@@ -122,18 +121,15 @@ pub fn enum_process_modules_ex(hprocess: HANDLE) -> windows::core::Result<HMODUL
 pub fn get_module_base_name_w(hprocess: HANDLE, hmodule: HMODULE) -> windows::core::Result<String> {
     let mut lpbasename = [0; MAX_PATH as usize];
 
-    let module_base_name_length = unsafe {
-        ProcessStatus::GetModuleBaseNameW(
-            hprocess,
-            hmodule,
-            &mut lpbasename,
-        )
-    };
+    let module_base_name_length =
+        unsafe { ProcessStatus::GetModuleBaseNameW(hprocess, hmodule, &mut lpbasename) };
 
     return if module_base_name_length == 0 {
         Err(Error::from_win32())
     } else {
-        Ok(String::from_utf16_lossy(&lpbasename[0..module_base_name_length as usize]))
+        Ok(String::from_utf16_lossy(
+            &lpbasename[0..module_base_name_length as usize],
+        ))
     };
 }
 

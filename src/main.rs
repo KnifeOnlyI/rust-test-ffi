@@ -1,15 +1,25 @@
-use std::env;
-
 use crate::process::find_process;
 
-mod windows_api;
-mod process;
+#[cfg(target_os = "linux")]
+mod linux_api;
 mod os;
+mod process;
+#[cfg(target_os = "windows")]
+mod windows_api;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let target_process_name = &args[1];
-    let process = find_process(String::from(target_process_name)).expect("Process not found");
+    #[cfg(target_os = "linux")]
+        let target_process_name = "test_ffi";
+    #[cfg(target_os = "windows")]
+        let target_process_name = "test_ffi.exe";
+    let r_process = find_process(String::from(target_process_name));
+
+    if r_process.is_err() {
+        println!("Process `{}` not found", target_process_name);
+        return;
+    }
+
+    let process = r_process.unwrap();
 
     println!("[{}] {}", process.pid, process.name);
 }
